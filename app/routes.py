@@ -1,20 +1,14 @@
-from flask import render_template, Response
+from flask import Blueprint, Response
 import cv2
 import torch
-import numpy as np
-
-from app import create_app
 
 # Load YOLOv5 model
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 
-app = create_app()
+# Create a blueprint
+bp = Blueprint('main', __name__)
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/video_feed')
+@bp.route('/video_feed')
 def video_feed():
     return Response(gen(model), mimetype='multipart/x-mixed-replace; boundary=frame')
 
@@ -32,7 +26,6 @@ def gen(model):
 
         # Perform inference
         results = model(frame)
-        print("Inference results:", results)
 
         # Convert results to numpy arrays
         labels, cords = results.xyxyn[0][:, -1].numpy(), results.xyxyn[0][:, :-1].numpy()
@@ -45,17 +38,10 @@ def gen(model):
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
                 cv2.putText(frame, label_text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
 
-        # Display frame locally for debugging
-        cv2.imshow('Video Feed', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
         # Encode frame as JPEG
         _, jpeg = cv2.imencode('.jpg', frame)
         frame = jpeg.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-
-    cv2.destroyAllWindows()
 
     cap.release()
