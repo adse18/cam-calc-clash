@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Object Detection Game{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-group">
+        <label>Select Classes to Detect:</label>
+        <div id="class-options">
+            <!-- Checkbox options will be populated dynamically -->
+        </div>
+        <button class="btn btn-primary mt-2" onclick="updateClasses()">Update Classes</button>
+    </div>
+
+    <div class="form-group">
+        <button id="toggleVideo" class="btn btn-secondary">Start Video</button>
+    </div>
+
+    <br>
+
+    <img id="video" src="" class="img-fluid" style="display: none;">
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Populate class options with checkboxes
+    const classes = ['person', 'car', 'dog', 'cat', 'bus', 'train', 'bike', 'horse', 'elephant', 'giraffe']; // Example classes
+    const classOptionsDiv = document.getElementById('class-options');
+
+    classes.forEach(className => {
+        const checkboxDiv = document.createElement('div');
+        checkboxDiv.classList.add('form-check');
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.classList.add('form-check-input');
+        checkbox.id = className;
+        checkbox.value = className;
+
+        const label = document.createElement('label');
+        label.classList.add('form-check-label');
+        label.htmlFor = className;
+        label.textContent = className;
+
+        checkboxDiv.appendChild(checkbox);
+        checkboxDiv.appendChild(label);
+        classOptionsDiv.appendChild(checkboxDiv);
+    });
+
+    function updateClasses() {
+        const selectedCheckboxes = Array.from(document.querySelectorAll('#class-options input:checked'));
+        const selectedOptions = selectedCheckboxes.map(checkbox => checkbox.value);
+
+        fetch('/select_classes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ classes: selectedOptions })
+        })
+        .then(response => response.json())
+        .then(data => console.log(data));
+    }
+
+    document.getElementById('toggleVideo').addEventListener('click', function() {
+        const videoElement = document.getElementById('video');
+        const button = document.getElementById('toggleVideo');
+
+        if (videoElement.style.display === 'none') {
+            videoElement.style.display = 'block';
+            videoElement.src = '/video_feed';
+            button.textContent = 'Stop Video';
+        } else {
+            videoElement.style.display = 'none';
+            videoElement.src = '';
+            button.textContent = 'Start Video';
+        }
+    });
+</script>
+{% endblock %}
