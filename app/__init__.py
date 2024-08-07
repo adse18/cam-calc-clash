@@ -1,5 +1,7 @@
 import os
 from flask import Flask, render_template
+import warnings
+warnings.filterwarnings("ignore", module="torch")
 
 def create_app(test_config=None):
     # Create and configure the app
