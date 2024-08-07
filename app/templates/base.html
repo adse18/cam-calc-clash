@@ -6,13 +6,9 @@
     <title>{% block title %}Object Detection Game{% endblock %}</title>
     <!-- Bootstrap CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        #video {
-            width: 100%;
-            max-width: 640px;
-            height: auto;
-        }
-    </style>
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    {% block extra_styles %}{% endblock %}
 </head>
 <body>
     <div class="container">

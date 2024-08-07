@@ -1,0 +1,10 @@
+#video {
+    width: 100%;
+    max-width: 640px;
+    height: auto;
+}
+
+.quiz-button:disabled {
+    background-color: #e0e0e0;
+    cursor: not-allowed;
+}

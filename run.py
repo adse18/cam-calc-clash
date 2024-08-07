@@ -1,4 +1,6 @@
 from app import create_app
+import warnings
+warnings.filterwarnings("ignore", module="torch")
 
 app = create_app()
 

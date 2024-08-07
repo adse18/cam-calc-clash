@@ -3,80 +3,175 @@
 {% block title %}Object Detection Game{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="form-group">
-        <label>Select Classes to Detect:</label>
-        <div id="class-options">
-            <!-- Checkbox options will be populated dynamically -->
-        </div>
-        <button class="btn btn-primary mt-2" onclick="updateClasses()">Update Classes</button>
-    </div>
-
-    <div class="form-group">
-        <button id="toggleVideo" class="btn btn-secondary">Start Video</button>
-    </div>
-
-    <br>
-
-    <img id="video" src="" class="img-fluid" style="display: none;">
-
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    // Populate class options with checkboxes
-    const classes = ['person', 'car', 'dog', 'cat', 'bus', 'train', 'bike', 'horse', 'elephant', 'giraffe']; // Example classes
-    const classOptionsDiv = document.getElementById('class-options');
-
-    classes.forEach(className => {
-        const checkboxDiv = document.createElement('div');
-        checkboxDiv.classList.add('form-check');
-
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.classList.add('form-check-input');
-        checkbox.id = className;
-        checkbox.value = className;
-
-        const label = document.createElement('label');
-        label.classList.add('form-check-label');
-        label.htmlFor = className;
-        label.textContent = className;
-
-        checkboxDiv.appendChild(checkbox);
-        checkboxDiv.appendChild(label);
-        classOptionsDiv.appendChild(checkboxDiv);
-    });
-
-    function updateClasses() {
-        const selectedCheckboxes = Array.from(document.querySelectorAll('#class-options input:checked'));
-        const selectedOptions = selectedCheckboxes.map(checkbox => checkbox.value);
-
-        fetch('/select_classes', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ classes: selectedOptions })
-        })
-        .then(response => response.json())
-        .then(data => console.log(data));
-    }
-
-    document.getElementById('toggleVideo').addEventListener('click', function() {
-        const videoElement = document.getElementById('video');
-        const button = document.getElementById('toggleVideo');
-
-        if (videoElement.style.display === 'none') {
-            videoElement.style.display = 'block';
-            videoElement.src = '/video_feed';
-            button.textContent = 'Stop Video';
-        } else {
-            videoElement.style.display = 'none';
-            videoElement.src = '';
-            button.textContent = 'Start Video';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YOLOv5 Quiz</title>
+    <style>
+        #video {
+            width: 640px;
+            height: 480px;
+            border: 1px solid black;
         }
-    });
-</script>
-{% endblock %}
+        #quiz {
+            margin-top: 20px;
+        }
+        #score {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+        #time {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>YOLOv5 Quiz</h1>
+    <div>
+        <img id="video" src="{{ url_for('main.video_feed') }}">
+    </div>
+    <div>
+        <button onclick="startQuiz()">Start Quiz</button>
+    </div>
+    <div id="quiz">
+        <p id="question">Question will appear here</p>
+        <button id="answer1" class="quiz-button" onclick="answerQuestion(this)" disabled>1</button>
+        <button id="answer2" class="quiz-button" onclick="answerQuestion(this)" disabled>2</button>
+        <button id="answer3" class="quiz-button" onclick="answerQuestion(this)" disabled>3</button>
+    </div>
+    <div id="score">Score: 0</div>
+    <div id="time">Time left: 60 seconds</div>
+
+    <script>
+        let score = 0;
+        let timeLeft = 60;
+        let correctAnswer = 0;
+        let timer = null;
+
+        function startQuiz() {
+            // Reset score and time
+            score = 0;
+            timeLeft = 60;
+            document.getElementById('score').innerText = 'Score: ' + score;
+            document.getElementById('time').innerText = 'Time left: ' + timeLeft + ' seconds';
+
+            // Clear any existing timer
+            if (timer) {
+                clearInterval(timer);
+            }
+
+            // Fetch the first question
+            fetch('/start_quiz')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Quiz data received:', data);  // Debugging line
+                    document.getElementById('question').innerText = data.question;
+                    correctAnswer = data.correctAnswer;
+
+                    // Shuffle answers and display
+                    const answers = [data.correctAnswer, ...data.incorrectAnswers];
+                    shuffleArray(answers);
+
+                    document.getElementById('answer1').innerText = answers[0];
+                    document.getElementById('answer2').innerText = answers[1];
+                    document.getElementById('answer3').innerText = answers[2];
+
+                    // Re-enable the buttons after setting the new question
+                    const buttons = document.querySelectorAll('.quiz-button');
+                    buttons.forEach(btn => btn.disabled = false);
+                })
+                .catch(error => {
+                    console.error('Error fetching question:', error);
+                });
+
+            // Start the timer
+            timer = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    alert('Game Over! Your score is ' + score);
+                } else {
+                    timeLeft -= 1;
+                    document.getElementById('time').innerText = 'Time left: ' + timeLeft + ' seconds';
+                }
+            }, 1000);
+        }
+
+        function answerQuestion(button) {
+            const answer = parseInt(button.innerText);  // Get the value displayed on the button
+
+            if (answer === correctAnswer) {  // Compare with correct answer
+                score += 1;
+                document.getElementById('score').innerText = 'Score: ' + score;
+                fetch('/next_question')
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('question').innerText = data.question;
+                        correctAnswer = data.correctAnswer;
+
+                        // Shuffle answers and display
+                        const answers = [data.correctAnswer, ...data.incorrectAnswers];
+                        shuffleArray(answers);
+
+                        document.getElementById('answer1').innerText = answers[0];
+                        document.getElementById('answer2').innerText = answers[1];
+                        document.getElementById('answer3').innerText = answers[2];
+
+                        // Re-enable the buttons after the question is updated
+                        const buttons = document.querySelectorAll('.quiz-button');
+                        buttons.forEach(btn => btn.disabled = false);
+                    });
+            } else {
+                // Handle wrong answer if needed
+            }
+        }
+
+        function autoAnswer() {
+            fetch('/detection_data')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        return;  // Do nothing if there is no data
+                    }
+
+                    // Find the item with the maximum confidence
+                    let maxConfidenceItem = data.reduce((maxItem, item) => {
+                        return item.confidence > maxItem.confidence ? item : maxItem;
+                    }, { confidence: -1 });  // Initialize with a confidence lower than any possible value
+
+                    // Auto-answer based on the item with the highest confidence
+                    if (maxConfidenceItem.confidence > 0) {  // Ensure confidence is greater than zero
+                        let buttonId;
+                        if (maxConfidenceItem.label === "scissors") {
+                            buttonId = 'answer1';
+                        } else if (maxConfidenceItem.label === "cup") {
+                            buttonId = 'answer2';
+                        } else if (maxConfidenceItem.label === "book") {
+                            buttonId = 'answer3';
+                        }
+
+                        if (buttonId) {
+                            const button = document.getElementById(buttonId);
+                            if (button) {
+                                button.click();  // Programmatically "click" the button
+                                // Disable buttons immediately after auto-clicking
+                                const buttons = document.querySelectorAll('.quiz-button');
+                                buttons.forEach(btn => btn.disabled = true);
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching detection data:', error);
+                });
+        }
+
+        // Poll for detection data every second
+        setInterval(autoAnswer, 1000);
+
+    </script>
+    
+</body>
+</html>
+{%endblock%}
