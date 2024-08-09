@@ -2,6 +2,7 @@
 
 ## Overview
 Welcome to the Arithmetic Quiz Web Application! This interactive app helps you test your arithmetic skills with a unique twist. To play, you'll need to use your webcam to hold up different objects representing answers to arithmetic questions. Your goal is to get as many points as possible within 60 seconds by correctly identifying the object that matches the correct answer.
+The app uses a YOLO model to detect items in the webcam video.
 
 ## Features
 - **Webcam Integration:** Detects objects held up in front of your webcam.
@@ -12,7 +13,7 @@ Welcome to the Arithmetic Quiz Web Application! This interactive app helps you t
 ## Installation Instructions
 
 ### 1. Create a Virtual Environment
-Navigate to your project directory and create a virtual environment:
+Download the code, then navigate to your project directory and create a virtual environment first:
 ```bash
 python -m venv venv_name
 ```
@@ -24,17 +25,16 @@ venv_name\Scripts\activate
 ```
 
 ### 3. Install Required Packages
-With the virtual environment activated, install the required packages from `requirements.txt`:
+With the virtual environment activated navigate to the project code directory and install the required packages from `requirements.txt`:
+```bash
+cd cam-calc-combat
+```
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 4. Run the Application
-Navigate to the project code directory:
-```bash
-cd cam-calc-combat
-```
-...and execute the application
+Execute the application:
 ```bash
 python run.py
 ```
@@ -52,6 +52,7 @@ Hold Up Objects: When prompted with a question, hold up one of the following obj
 - Scissors for the first answer option.
 - Cup for the second answer option.
 - Cell Phone for the third answer option.
+
 Score Points: If the detected object matches the correct answer, you earn a point.
 Repeat: Continue answering questions until the timer runs out.
 
@@ -59,8 +60,8 @@ Repeat: Continue answering questions until the timer runs out.
 - Flask
 - OpenCV
 - PyTorch
-- Other dependencies listed in requirements.txt
+- Other dependencies are listed in requirements.txt
 
 ### 8. Troubleshooting
-- Ensure your webcam is properly connected and accessible.
+- Ensure your webcam is properly connected and accessible. Object detection works also better in front of a blanc background, so for the best experience sit in front of a wall when playing.
 - Check that all required packages are installed and up-to-date.
