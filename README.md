@@ -27,7 +27,7 @@ venv_name\Scripts\activate
 ### 3. Install Required Packages
 With the virtual environment activated navigate to the project code directory and install the required packages from `requirements.txt`:
 ```bash
-cd cam-calc-combat
+cd cam-calc-clash
 ```
 ```bash
 pip install -r requirements.txt
