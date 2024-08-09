@@ -37,6 +37,12 @@ def detection_data():
     # Ensure you have a global or shared state for the latest detections
     return jsonify(latest_detections)  # Example placeholder
 
+@bp.route('/clear_detections', methods=['POST'])
+def clear_detections():
+    global latest_detections
+    latest_detections = []  # Clear the global variable
+    return jsonify({'status': 'success'})
+
 def generate_question():
     a, b = random.randint(1, 10), random.randint(1, 10)
     question = f"What is {a} + {b}?"

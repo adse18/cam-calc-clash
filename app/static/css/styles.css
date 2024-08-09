@@ -3,3 +3,17 @@
     max-width: 640px;
     height: auto;
 }
+
+#quiz {
+    margin-top: 20px;
+}
+
+#score {
+    margin-top: 20px;
+    font-size: 20px;
+}
+
+#time {
+    margin-top: 20px;
+    font-size: 20px;
+}
