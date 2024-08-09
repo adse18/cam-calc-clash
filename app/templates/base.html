@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Object Detection Game{% endblock %}</title>
+    <title>{% block title %}CamCalcClash{% endblock %}</title>
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='icons/calc_icon.png') }}" type="image/x-icon">
     <!-- Bootstrap CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom CSS -->
@@ -12,8 +14,10 @@
 </head>
 <body>
     <div class="container">
-        <header class="my-4">
-            <h1>{% block header %}Object Detection Game{% endblock %}</h1>
+        <header class="my-4 p-4 bg-dark text-white rounded shadow-lg">
+            <h1 class="display-4 text-center font-weight-bold">
+                {% block header %}🔥Cam Calc Clash🔥{% endblock %}
+            </h1>
         </header>
         <main>
             {% block content %}
@@ -21,7 +25,7 @@
             {% endblock %}
         </main>
         <footer class="my-4">
-            <p>&copy; 2024 Object Detection Game</p>
+            <p>&copy; 2024 Cam Calc Clash</p>
         </footer>
     </div>
 

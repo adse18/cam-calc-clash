@@ -1,44 +1,93 @@
 {% extends "base.html" %}
 
-{% block title %}Object Detection Game{% endblock %}
-
 {% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>YOLOv5 Quiz</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
-
+    <!-- Link to the external CSS stylesheet -->
 </head>
 <body>
-    <h1>YOLOv5 Quiz</h1>
-    <div>
-        <img id="video" src="" alt="Video Feed - press Start Video">
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Left Column: Video and Control Buttons -->
+            <div class="col-md-6">
+                <!-- Heading and instructions -->
+                <h2>Test your arithmetic skills...</h2>
+                <p>Start a live-video of your webcam by pressing the green start button. Then start the quiz
+                     and calculate the correct answer to the given task in the red box and hold the item that 
+                     represents this answer clearly visible into the webcam. 
+                     If your answer was right you will receive one point and the next question will appear until
+                     your time is over. Make sure you have nothing in your background that irritates the object 
+                     detection. Good luck!</p>
+                
+                <!-- Video feed placeholder -->
+                <div class="mb-3">
+                    <img id="video" src="" alt="Video Feed - press 'Start Video'" class="img-fluid">
+                </div>
+                
+                <!-- Buttons to start and pause the video -->
+                <div class="mb-3">
+                    <button class="btn btn-success mr-2" onclick="startVideo()">Start Video</button>
+                    <button class="btn btn-warning" onclick="pauseVideo()">Pause Video</button>
+                </div>
+            </div>
+
+            <!-- Right Column: Quiz Section -->
+            <div class="col-md-6">
+                <!-- Question box -->
+                <div class="d-flex justify-content-center mb-4">    
+                    <h2 id="question" class="bg-danger rounded text-white text-center p-5 w-100">What is...?</h2>
+                </div>
+
+                <!-- Quiz buttons and answer options -->
+                <div id="quiz" class="mb-4">
+                    <div class="row text-center">
+                        <!-- Answer Buttons -->
+                        <div class="col">
+                            <button id="answer1" class="btn btn-primary w-100 mb-3" onclick="answerQuestion(this)">---</button>
+                        </div>
+                        <div class="col">
+                            <button id="answer2" class="btn btn-primary w-100 mb-3" onclick="answerQuestion(this)">---</button>
+                        </div>
+                        <div class="col">
+                            <button id="answer3" class="btn btn-primary w-100 mb-3" onclick="answerQuestion(this)">---</button>
+                        </div>
+                    </div>
+                    <div class="row text-center">
+                        <!-- Answer Text Boxes -->
+                        <div class="col">
+                            <input type="text" class="card-title bg-info text-white text-center w-100" value="&uarr; Scissors✂️ &uarr;" readonly>
+                        </div>
+                        <div class="col">
+                            <input type="text" class="card-title bg-info text-white text-center w-100" value="&uarr; Cup☕ &uarr;" readonly>
+                        </div>
+                        <div class="col">
+                            <input type="text" class="card-title bg-info text-white text-center w-100" value="&uarr; Cell Phone📱 &uarr;" readonly>
+                        </div>
+                    </div>
+                </div>
+                <!-- Start Quiz Button -->
+                <div class="mb-3">
+                    <button class="btn btn-success" onclick="startQuiz()">Start Quiz</button>
+                </div>
+                <!-- Score and Time -->
+                <div class="mb-2" id="score">Score: 0</div>
+                <div id="time">Time left: 60 seconds</div>
+            </div>
+        </div>
     </div>
-    <div>
-        <button onclick="startQuiz()">Start Quiz</button>
-        <button onclick="startVideo()">Start Video</button>
-        <button onclick="pauseVideo()">Pause Video</button>
-    </div>
-    <div id="quiz">
-        <p id="question">Question will appear here</p>
-        <button id="answer1" class="quiz-button" onclick="answerQuestion(this)" >Scissors</button>
-        <button id="answer2" class="quiz-button" onclick="answerQuestion(this)" >Cup</button>
-        <button id="answer3" class="quiz-button" onclick="answerQuestion(this)" >Book</button>
-    </div>
-    <div id="correct-answer" class="correct-answer"></div>
-    <div id="score">Score: 0</div>
-    <div id="time">Time left: 30 seconds</div>
-    <div id="extra-paragraph"></div>
 
     <script>
-        let score = 0;
-        let timeLeft = 30;
-        let correctAnswer = 0;
-        let timer = null;
-        let autoAnswerInterval = null;  // Variable to keep track of the interval ID
+        // Initialize global variables for the quiz
+        let score = 0;                 // Player's score
+        let timeLeft = 60;             // Time left for the quiz in seconds
+        let correctAnswer = 0;         // Stores the correct answer for the current question
+        let timer = null;              // Timer object for the quiz countdown
+        let autoAnswerInterval = null; // Interval ID for auto-answering based on webcam detection
 
+        // Function to pause the video feed and stop auto-answering
         function pauseVideo() {
             const videoElement = document.getElementById('video');
             videoElement.src = "";  // Stop the video feed
@@ -50,6 +99,7 @@
             }
         }
 
+        // Function to start the video feed and auto-answering
         function startVideo() {
             const videoElement = document.getElementById('video');
             videoElement.src = "{{ url_for('main.video_feed') }}";  // Start the video feed
@@ -63,10 +113,11 @@
             }
         }
 
+        // Function to start the quiz
         function startQuiz() {
             // Reset score and time
             score = 0;
-            timeLeft = 30;
+            timeLeft = 60;
             document.getElementById('score').innerText = 'Score: ' + score;
             document.getElementById('time').innerText = 'Time left: ' + timeLeft + ' seconds';
 
@@ -75,22 +126,23 @@
                 clearInterval(timer);
             }
 
-            // Fetch the first question
+            // Fetch the first question from the server
             fetch('/start_quiz')
                 .then(response => response.json())
                 .then(data => {
                     console.log('Quiz data received:', data);  // Debugging line
                     document.getElementById('question').innerText = data.question;
                     correctAnswer = data.correctAnswer;
-                    // Shuffle answers and display
+
+                    // Shuffle answers and display them
                     const answers = [data.correctAnswer, ...data.incorrectAnswers];
                     shuffleArray(answers);
 
                     document.getElementById('answer1').innerText = answers[0];
                     document.getElementById('answer2').innerText = answers[1];
-                    document.getElementById('answer3').innerHTML = answers[2];
+                    document.getElementById('answer3').innerText = answers[2];
 
-                    // Enable the buttons after setting the new question
+                    // Enable the answer buttons after setting the new question
                     const buttons = document.querySelectorAll('.quiz-button');
                     buttons.forEach(btn => btn.disabled = false);
 
@@ -99,11 +151,11 @@
                     console.error('Error fetching question:', error);
                 });
 
-            // Start the timer
+            // Start the countdown timer
             timer = setInterval(() => {
                 if (timeLeft <= 0) {
                     clearInterval(timer);
-                    alert('Game Over! Your score is ' + score);
+                    alert('Game Over! Your score is ' + score);  // Alert the user when time runs out
                 } else {
                     timeLeft -= 1;
                     document.getElementById('time').innerText = 'Time left: ' + timeLeft + ' seconds';
@@ -111,20 +163,24 @@
             }, 1000);
         }
 
+        // Function to handle the user's answer selection
         function answerQuestion(button) {
             const selectedAnswer = button.innerText;
             console.log('Selected Answer:', selectedAnswer, 'Correct Answer:', correctAnswer);
 
+            // Check if the selected answer is correct
             if (selectedAnswer === String(correctAnswer)) {  
                 score += 1;
                 document.getElementById('score').innerText = 'Score: ' + score;
+
+                // Fetch the next question from the server
                 fetch('/next_question')
                     .then(response => response.json())
                     .then(data => {
                         document.getElementById('question').innerText = data.question;
                         correctAnswer = data.correctAnswer;
 
-                        // Shuffle answers and display
+                        // Shuffle answers and display them
                         const answers = [data.correctAnswer, ...data.incorrectAnswers];
                         shuffleArray(answers);
 
@@ -139,25 +195,29 @@
                         });
                     });
             } else {
-                // add something
+                // Add any additional logic for incorrect answers here
             }
         }
 
+        // Utility function to shuffle the elements of an array (Fisher-Yates shuffle algorithm)
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [array[i], array[j]] = [array[j], array[i]];  // Swap elements
-    }
-}
+            }
+        }
+
+        // Function to automatically select an answer based on webcam object detection
         function autoAnswer() {
+            // Fetch detection data from the server
             fetch('/detection_data')
                 .then(response => response.json())
                 .then(data => {
                     if (data.length === 0) {
-                        return;  // Do nothing if there is no data
+                        return;  // Do nothing if there is no detection data
                     }
 
-                    // Find the item with the maximum confidence
+                    // Find the item with the highest confidence
                     let maxConfidenceItem = data.reduce((maxItem, item) => {
                         return item.confidence > maxItem.confidence ? item : maxItem;
                     }, { confidence: -1 });  // Initialize with a confidence lower than any possible value
@@ -165,15 +225,17 @@
                     // Auto-answer based on the item with the highest confidence
                     if (maxConfidenceItem.confidence > 0) {  // Ensure confidence is greater than zero
                         let buttonId;
+                        // Map detected label to the corresponding answer button
                         if (maxConfidenceItem.label === "scissors") {
                             buttonId = 'answer1';
                         } else if (maxConfidenceItem.label === "cup") {
                             buttonId = 'answer2';
-                        } else if (maxConfidenceItem.label === "book") {
+                        } else if (maxConfidenceItem.label === "cell phone") {
                             buttonId = 'answer3';
                         }
                         console.log('Autoselected Button:', buttonId);
 
+                        // Simulate a button click if a valid button is identified
                         if (buttonId) {
                             const button = document.getElementById(buttonId);
                             if (button) {
@@ -181,7 +243,8 @@
                             }
                         }
                     }
-                    // Clear detections after processing
+
+                    // Clear detections after processing to avoid repeated clicks
                     fetch('/clear_detections', { method: 'POST' })
                         .catch(error => {
                             console.error('Error clearing detections:', error);
@@ -190,24 +253,6 @@
                 .catch(error => {
                     console.error('Error fetching detection data:', error);
                 });
-        }
-
-        function handleButtonClick(button) {
-            // Check if the first button was clicked
-            if (button.id === 'answer1') {
-                addParagraph();
-            }
-            answerQuestion(2);
-        }
-        function addParagraph() {
-            // Create a new paragraph element
-            const newParagraph = document.createElement('p');
-
-            // Set the text content of the paragraph
-            newParagraph.textContent = "This is an additional paragraph added to the webpage.";
-
-            // Append the paragraph to the div with id 'extra-paragraph'
-            document.getElementById('extra-paragraph').appendChild(newParagraph);
         }
     </script>
     
